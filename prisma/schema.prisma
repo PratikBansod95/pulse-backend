@@ -1,0 +1,172 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// ─────────────────────────────────────────
+// USERS TABLE
+// ─────────────────────────────────────────
+
+model User {
+  id                    String    @id @default(uuid())
+  firebase_uid          String    @unique
+  email                 String    @unique
+  name                  String
+
+  // Profession
+  profession_primary    String
+  profession_sub        String
+  experience_years      String    // "0-2", "2-6", "6+"
+  experience_label      String    // "early", "mid", "senior"
+  primary_goal          String
+  background_note       String?
+
+  // Notification preferences
+  notification_enabled        Boolean   @default(true)
+  notification_preferred_time String    @default("07:00") // "HH:MM" 24hr
+  weekly_signal_enabled       Boolean   @default(false)
+  fcm_tokens                  String[]  @default([])
+
+  // Behavioral tracking
+  last_active           DateTime  @default(now())
+  total_reads           Int       @default(0)
+  joined_at             DateTime  @default(now())
+  reengagement_sent_at  DateTime?
+
+  // Growth profile (JSON — flexible, updated by AI)
+  growth_profile        Json      @default("{}")
+
+  // Relationships
+  content_reads         ContentRead[]
+  reflections           Reflection[]
+
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  @@index([firebase_uid])
+  @@index([notification_preferred_time])
+  @@index([last_active])
+}
+
+// ─────────────────────────────────────────
+// DAILY CONTENT TABLE
+// ─────────────────────────────────────────
+
+model DailyContent {
+  id                    String    @id @default(uuid())
+  user_id               String
+  content_date          String    // "YYYY-MM-DD"
+
+  // AI Generation metadata
+  pillar                String
+  topic                 String
+  estimated_read_minutes Int      @default(2)
+  personalization_used  String[]  @default([])
+  generation_attempts   Int       @default(1)
+  used_backup           Boolean   @default(false)
+
+  // Lock screen content
+  hook_line             String
+  sub_line              String    @default("")
+
+  // Notification
+  notification_text     String
+  notification_style    String    @default("curiosity")
+
+  // Full content (JSON)
+  content               Json
+
+  // Image
+  image_url             String?
+  image_prompt          String?
+  image_generated       Boolean   @default(false)
+
+  // Status
+  notification_sent     Boolean   @default(false)
+  notification_sent_at  DateTime?
+
+  // Relationships
+  content_read          ContentRead?
+  reflections           Reflection[]
+
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  @@unique([user_id, content_date])
+  @@index([user_id])
+  @@index([content_date])
+  @@index([notification_sent])
+}
+
+// ─────────────────────────────────────────
+// CONTENT READS TABLE
+// ─────────────────────────────────────────
+
+model ContentRead {
+  id                    String    @id @default(uuid())
+  user_id               String
+  content_id            String    @unique
+  content_date          String
+
+  read_at               DateTime  @default(now())
+  read_duration_seconds Int?
+
+  // Relationships
+  user                  User         @relation(fields: [user_id], references: [id])
+  content               DailyContent @relation(fields: [content_id], references: [id])
+
+  @@index([user_id])
+  @@index([content_date])
+}
+
+// ─────────────────────────────────────────
+// REFLECTIONS TABLE
+// ─────────────────────────────────────────
+
+model Reflection {
+  id                    String    @id @default(uuid())
+  user_id               String
+  content_id            String
+  content_date          String
+
+  response              String    // "yes" or "no"
+  responded_at          DateTime  @default(now())
+
+  // Relationships
+  user                  User         @relation(fields: [user_id], references: [id])
+  content               DailyContent @relation(fields: [content_id], references: [id])
+
+  @@unique([user_id, content_id])
+  @@index([user_id])
+}
+
+// ─────────────────────────────────────────
+// BACKUP CONTENT TABLE
+// ─────────────────────────────────────────
+
+model BackupContent {
+  id                    String    @id @default(uuid())
+  profession_primary    String
+  pillar                String
+  topic                 String
+
+  hook_line             String
+  content               Json
+  image_url             String?
+
+  times_served          Int       @default(0)
+  last_served_at        DateTime?
+  is_active             Boolean   @default(true)
+
+  created_at            DateTime  @default(now())
+
+  @@index([profession_primary])
+  @@index([pillar])
+}

@@ -1,0 +1,41 @@
+{
+  "name": "pulse-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "db:migrate": "npx prisma migrate dev",
+    "db:generate": "npx prisma generate",
+    "db:studio": "npx prisma studio",
+    "seed": "node scripts/seedBackupContent.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/client": "^6.19.3",
+    "canvas": "^3.2.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^4.22.2",
+    "express-rate-limit": "^8.5.2",
+    "firebase-admin": "^13.10.0",
+    "helmet": "^8.2.0",
+    "node-cron": "^4.2.1",
+    "prisma": "^6.19.3",
+    "redis": "^5.12.1",
+    "sharp": "^0.34.5",
+    "uuid": "^14.0.0",
+    "winston": "^3.19.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "pg": "^8.21.0",
+    "tsx": "^4.22.3"
+  }
+}
